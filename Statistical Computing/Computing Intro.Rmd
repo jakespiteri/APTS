@@ -240,3 +240,83 @@ contour(x.seq, z.seq, cont.mat, levels = seq(-0.5,2.5, 0.5))
 ```
 
 ### Part (d)
+Write an R function rb.grad which takes single values for each of x and z as arguments, and returns the gradient vector of Rosenbrock’s function, i.e. a vector of length 2 containing ∂f/∂x and ∂f/∂z evaluated at the supplied x,z values (you need to first differentiate f algebraically to do this).
+```{r}
+rb.grad <- function(x,z) {
+  d <- deriv(expression(100*(z-x^2)^2 + (1-x)^2), namevec=c("x", "z"), func=TRUE)
+  attr(d(x,z), "gradient")
+}
+
+rb.grad(1,4)
+```
+
+### Part (e)
+Test the `rb.grad` function above via finite differencing. Let's test around the point $(0,0)$.
+```{r}
+delta <- 1e-7
+(rb(0+delta,0) - rb(0,0))/delta
+(rb(0,0+delta) - rb(0,0))/delta
+rb.grad(0,0)
+```
+
+### Part (f)
+```{r}
+rb.hess <- function(x,z) {
+  d <- deriv(expression(100*(z-x^2)^2 + (1-x)^2), namevec=c("x", "z"), hessian=TRUE, func=TRUE)
+  attr(d(x,z), "hessian")[,,]
+}
+
+rb.hess(1,4)
+```
+
+### Part (g)
+Test the `rb.hess` function via finite differencing the `rb.grad`.
+```{r}
+delta <- 1e-7
+
+(rb.grad(0+delta, 0) - rb.grad(0, 0))/delta
+(rb.grad(0, 0+delta) - rb.grad(0, 0))/delta
+rb.hess(0,0)
+```
+
+### Part (h)
+Taylor’s theorem implies that you can use rb, rb.grad and rb.hess to produce a ∗∗
+quadratic function approximating f (x, z) in the neigbourhood of any particular point x , z . Write an R function to find such an approximation, given a point x∗, z∗, and to add a contour plot of the approximation to an existing contour plot of f (see add argument of contour). Your function should accept an argument col allowing you to set the colour of the contours of the quadratic approximation. Do make sure that the same transformation (if any) and levels are used when contouring the approximation and f itself.
+
+```{r}
+# function which produces a quadractic approximation and plots it
+cont.approx <- function(x.star, z.star, col) {
+  
+  # define a function for the quadratic approximation
+  quad.approx <- function(x,z) {rb(x.star,z.star) +    
+      rb.grad(x.star,z.star)%*%c(x-x.star, z-z.star) + (t(c(x-x.star, z-z.star)) %*% rb.hess(x.star, z.star) %*% c(x-x.star, z-z.star))/2}
+  
+  cont.mat <- outer(x.seq,
+                    z.seq,
+                    Vectorize(function(x,z) log10(quad.approx(x,z))))
+  
+  contour(x.seq, z.seq, cont.mat, add=TRUE, col=col, levels=seq(-0.5,2.5, 0.5))
+}
+
+# approximate contour around (-1,0.5)
+cont.mat <- outer(x.seq,
+                  z.seq,
+                  Vectorize(function(x,z) log10(rb(x,z))))
+contour(x.seq, z.seq, cont.mat, levels = seq(-0.5,2.5, 0.5))
+cont.approx(-1,0.5, col="red")
+
+# approximate contour around (0,0)
+cont.mat <- outer(x.seq,
+                  z.seq,
+                  Vectorize(function(x,z) log10(rb(x,z))))
+contour(x.seq, z.seq, cont.mat, levels = seq(-0.5,2.5, 0.5))
+cont.approx(0,0, col="red")
+
+# approximate contour around (1,1)
+cont.mat <- outer(x.seq,
+                  z.seq,
+                  Vectorize(function(x,z) log10(rb(x,z))))
+contour(x.seq, z.seq, cont.mat, levels = seq(-0.5,2.5, 0.5))
+cont.approx(1,1, col="red")
+```
+
