@@ -1,0 +1,116 @@
+---
+title: "Computing Intro"
+author: "Jake Spiteri"
+date: "09/12/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Section 4 --- Exercises
+
+## Question 1
+Computers do not represent most real numbers exactly. Rather, a real number is approximatedby the nearest real number that can be represented exactly (floating point number), given somescheme for representing real numbers as fixed length binary sequences. Often the approximation is not noticeable, but it can make a big difference relative to exact arithmetic (imagine thatyou want to know the difference between 2 distinct real numbers that are approximated by thesamebinary sequence, for example).
+
+One consequence of working infinite precision arithmeticis that for any numberx, there is a small number $\epsilon$ for which $x+\epsilon$is indistinguishable from $x$ (with any number smaller than this having the same property).
+
+### Part (a)
+```{r}
+eps <- 1
+x <- 1
+while(x+eps != x) 
+  eps <- eps/2
+eps/x
+```
+
+### Part (b)
+```{r}
+eps <- 1e-18; x <- 1
+while(x == x+eps)
+  eps <- eps+1e-18
+eps
+```
+
+### Part (c)
+```{r}
+2*eps
+.Machine$double.eps
+```
+
+### Part (d)
+```{r}
+eps <- 1; x <- 1/4
+while(x+eps != x) 
+  eps <- eps/2
+eps/x
+```
+
+### Part (e)
+
+
+### Part (f)
+
+
+## Question 2
+### Part (a)
+R  is  an  interpreted  language.   Instructions  are  interpreted  ‘on  the  fly’.   This  tends  to  meanthat it is efficient to code in such a way that many calculations are performed per interpretedinstruction. Often this implies that loops should be avoided, otherwise R can spend much moretime interpreting the instructions to carry out a calculation than on performing the calculation itself.
+
+```{r}
+# rewrite this
+system.time({
+X <- matrix(runif(100000),1000,100)
+z <- rep(0,1000)
+for(i in 1:1000){
+  for(j in 1:100) z[i] <- z[i] + X[i,j]
+}
+})
+
+
+# using apply
+system.time({
+z <- apply(X, 1, sum)
+})
+
+# using rowSums
+system.time({
+z <- rowSums(X)
+})
+
+# using vectorization
+system.time({
+ones <- rep(1,100)
+z <- X %*% ones
+})
+
+```
+
+### Part (b)
+```{r}
+# rewrite the following
+system.time({
+n <- 100000
+z <- rnorm(n)
+zneg <- 0; j <- 1
+for(i in 1:n){
+  if(z[i]<0){
+    zneg[j] <- z[i]
+    j <- j + 1
+  }
+}
+})
+
+# using apply
+n <- 100000
+z <- rnorm(n)
+system.time(
+zneg <- lapply(z, function(x) x[x<0])
+)
+
+system.time(
+zneg <- z[z<0]
+)
+```
+
+
