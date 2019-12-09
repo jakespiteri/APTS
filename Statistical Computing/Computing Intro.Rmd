@@ -114,3 +114,129 @@ zneg <- z[z<0]
 ```
 
 
+## Question 3
+```{r}
+set.seed(1)
+n <- 1000
+A <- matrix(runif(n*n),n,n) 
+x <- runif(n)
+
+t(x) %*% A %*% x
+sum(diag(A))
+sum(diag((t(A) %*% diag(x) %*% A)))
+```
+
+## Question 4
+We will solve the linear system $Ax = x$ for $x$, where $y$ is a known $n$ vector and $A$ is a known $n \times n$ matrix. We will solve this by forming $A^{-1}$, and directly without forming the inverse of $A$.
+### Part (a)
+We first create an $A, x$, and $y$ satisfying $Ax=y$.
+```{r}
+set.seed(0)
+n <- 1000
+A <- matrix(runif(n*n),n,n) 
+x.true <- runif(n)
+y <- A%*%x.true
+```
+
+### Part (b)
+We form the inverse of $A$ explicitly and then form $x_1 = A^{-1}y$. Note that inverting the matrix takes a long time.
+```{r}
+A.inv <- solve(A)
+x.1 <- A.inv %*% y
+mean(abs(x.1 - x.true))
+```
+
+### Part (c)
+We now directly solve the lienar system for $x$.
+```{r}
+x.2 <- solve(A, y)
+mean(abs(x.2 - x.true))
+```
+
+### Part (d)
+In part (b) and (c) we see that solving directly for $x$ is much faster, and results in less numerical error.
+
+
+## Question 5
+Write an R function which takes an un-ordered vector of observations x and returns the values of the empirical c.d.f. for each value, in the order corresponding to the original $x$ vector. (See ?sort.int.)
+```{r}
+empirical.cdf <- function(x) {
+  # sort x and store length
+  x.sorted <- sort(x); n <- length(x)
+  
+  # initialise cdf.hat and calculate
+  cdf.hat <- rep(0,n)
+  for(i in 1:n) {
+    cdf.hat[i] <- sum((x.sorted < x.sorted[i]))/n
+  }
+  
+  # map cdf values to original unsorted x
+  cdf.hat <- cdf.hat[order(x)]
+  
+  # return cdf.hat
+  return(cdf.hat)
+}
+
+empirical.cdf(runif(100))
+```
+
+### Part (b)
+Modify your function to take an extra argument plot.cdf, which when TRUE will cause the empirical c.d.f. to be plotted as a step function, over a suitable $x$ range.
+
+```{r}
+empirical.cdf <- function(x, plot.cdf=TRUE) {
+  # sort x and store length
+  x.sorted <- sort(x); n <- length(x)
+  
+  # initialise cdf.hat and calculate
+  cdf.hat <- rep(0,n)
+  for(i in 1:n) {
+    cdf.hat[i] <- sum((x.sorted < x.sorted[i]))/n
+  }
+  
+  # cases: if plot.cdf is TRUE then plot cdf; else return cdf.hat
+  if(plot.cdf) {
+    # create stepfun object
+    step.fn <- stepfun(x.sorted[-n], cdf.hat)
+    plot(step.fn)
+  } else {
+      # map cdf values to original unsorted x
+      cdf.hat <- cdf.hat[order(x)]
+      return(cdf.hat)
+  }
+}
+
+empirical.cdf(runif(10))
+```
+
+## Question 6
+
+### Part (a)
+Write an R function which takes arguments equal length vectors $x$ and $z$ and returns the vector of values of Robenbrock's functions at each $x[i], z[i]$.
+```{r}
+rb <- function(x,z) {100*(z-x^2)^2 + (1-x)^2}
+rb(seq(-10,10), seq(-10,10))
+```
+
+### Part (b)
+Produce a contour plot over the rectangle $-1.5 < x < 1.5$, $-0.5 < z < 1.5$.
+```{r}
+# produce a matrix of evaluations of the rosenbrock function
+x.seq <- seq(-1.5, 1.5, length.out=100)
+z.seq <- seq(-0.5, 1.5, length.out=100)
+cont.mat <- outer(x.seq,
+                  z.seq,
+                  Vectorize(function(x,z) rb(x,z)))
+contour(x=x.seq, y=z.seq, cont.mat)
+```
+
+### Part (c)
+We form the contour of the `log10` of the function, and adjust the levels argument.
+```{r}
+cont.mat <- outer(x.seq,
+                  z.seq,
+                  Vectorize(function(x,z) log10(rb(x,z))))
+contour(x.seq, z.seq, cont.mat, levels = seq(-0.5,2.5, 0.5))
+```
+
+### Part (d)
