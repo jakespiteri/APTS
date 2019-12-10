@@ -177,7 +177,7 @@ empirical.cdf <- function(x) {
   return(cdf.hat)
 }
 
-empirical.cdf(runif(100))
+empirical.cdf(rnorm(100))
 ```
 
 ### Part (b)
@@ -206,7 +206,7 @@ empirical.cdf <- function(x, plot.cdf=TRUE) {
   }
 }
 
-empirical.cdf(runif(10))
+empirical.cdf(rnorm(5000))
 ```
 
 ## Question 6
@@ -283,6 +283,7 @@ rb.hess(0,0)
 Taylor’s theorem implies that you can use rb, rb.grad and rb.hess to produce a ∗∗
 quadratic function approximating f (x, z) in the neigbourhood of any particular point x , z . Write an R function to find such an approximation, given a point x∗, z∗, and to add a contour plot of the approximation to an existing contour plot of f (see add argument of contour). Your function should accept an argument col allowing you to set the colour of the contours of the quadratic approximation. Do make sure that the same transformation (if any) and levels are used when contouring the approximation and f itself.
 
+Part (i)
 ```{r}
 # function which produces a quadractic approximation and plots it
 cont.approx <- function(x.star, z.star, col) {
@@ -318,5 +319,49 @@ cont.mat <- outer(x.seq,
                   Vectorize(function(x,z) log10(rb(x,z))))
 contour(x.seq, z.seq, cont.mat, levels = seq(-0.5,2.5, 0.5))
 cont.approx(1,1, col="red")
+```
+
+Part (ii)
+
+```{r}
+cont.mat <- outer(x.seq,
+                  z.seq,
+                  Vectorize(function(x,z) log10(rb(x,z))))
+contour(x.seq, z.seq, cont.mat, levels = seq(-0.5,2.5, 0.5))
+cont.approx(.5,.5, col="red")
+```
+
+## Question 7
+By inspection Rosenbrock’s function has a minimum of 0 at 1, 1, but it is useful test function for optimization methods. As an introduction to numerical optimization it is instructive to try out some of the optimization methods supplied in the R function optim.
+
+### Part (a)
+Read the help file ?optim, noting in particular the required arguments, how to select the optimization method, and what the function returns.
+
+### Part (b)
+Write a version of Rosenbrock’s function in which arguments x and z are supplied as first and second elements of a single vector, so that this function is suitable for passing as the fn argument of optim. Do the same for the gradient function for Rosenbrock’s function, so that it is suitable for supplying as the gr argument to optim. The easiest way to do this is to write simple ‘wrapper’ functions that call rb and rb.grad created in the previous question.
+
+```{r}
+# write rb function with one input
+rb <- function(x) {100*(x[2]-x[1]^2)^2 + (1-x[1])^2}
+optim(c(0,0), rb) # sanity check
+
+#write rb.grad function with one input
+rb.grad <- function(x) {
+  x1 <- x[1]; x2 <- x[2]
+  d <- deriv(expression(100*(x2-x1^2)^2 + (1-x1)^2), namevec=c("x1", "x2"), func=TRUE)
+  attr(d(x1,x2), "gradient")
+}
+rb.grad(c(0.5,0.5)) # sanity check
+```
+
+### Part (c)
+```{r}
+# optimize rb with Nelder-Mead method using rb.grad
+optim(c(-0.5,1), rb, gr=rb.grad)
+```
+The method seems to have converged relatively well. Let's compute the accuracy.
+
+```{r}
+c(1,1)-optim(c(-0.5,1), rb, gr=rb.grad)$par
 ```
 
